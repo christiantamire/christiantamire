@@ -1,5 +1,22 @@
-# 💫 About Me:
-# 👋 Hi, I'm Christian Musasizi<br><br>## 🎓 About Me<br>I’m a university student currently pursuing **Cybersecurity**.  <br>I’m passionate about technology, with a strong focus on **Linux systems** and **Networking**.<br><br>## 🐧 Interests<br>- Linux systems & administration  <br>- Computer networking  <br>- Governance, Risk & Compliance (GRC)  <br>- Reverse engineering (binary & malware analysis)<br><br>## 💻 Programming<br>I write code from time to time, primarily using:<br>- Python<br><br>## 🔬 Currently Exploring<br>- Binary analysis  <br>- Malware analysis  <br>- Reverse engineering techniques  <br><br>---<br><br>> “Security is not a product, but a process.”
+## Hi, I'm Christian Musasizi
+
+### About Me
+I’m a university student pursuing Cybersecurity.  
+I’m passionate about Linux systems and Networking.
+
+### Interests
+- Linux systems & administration  
+- Computer networking  
+- Governance, Risk & Compliance (GRC)  
+- Reverse engineering (binary & malware analysis)
+
+### Programming
+- Python
+
+### Currently Exploring
+- Binary analysis  
+- Malware analysis  
+- Reverse engineering techniques
 
 
 ## 🌐 Socials:
