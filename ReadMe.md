@@ -8,15 +8,10 @@ I’m passionate about Linux systems and Networking.
 - Linux systems & administration  
 - Computer networking  
 - Governance, Risk & Compliance (GRC)  
-- Reverse engineering (binary & malware analysis)
+- Ethical hacking
 
 ### Programming
 - Python
-
-### Currently Exploring
-- Binary analysis  
-- Malware analysis  
-- Reverse engineering techniques
 
 
 ## 🌐 Socials:
