@@ -28,6 +28,7 @@ A fully designed and implemented enterprise network for a Kampala-based consulti
 
 [Network Documentation](/project-docs/nexus/nexus-documentation.md)  
 [Device Configurations](/project-docs/nexus/nexus-configurations.md)
+[Packet Tracer File](/project-docs/nexus/ENT_LAB.pkt)
 
 
 
