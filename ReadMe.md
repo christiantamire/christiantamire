@@ -13,6 +13,23 @@ I’m passionate about Linux systems and Networking.
 ### Programming
 - Python
 
+## Projects
+
+### Nexus Consulting Group — Enterprise Network Lab
+A fully designed and implemented enterprise network for a Kampala-based consulting firm, built in Cisco Packet Tracer.
+
+**Key implementations:**
+- Three-tier hierarchical architecture (Core, Distribution, Access)
+- Cisco ASA firewall with granular ACLs across DMZ, internal, and outside interfaces
+- OSPF routing, HSRP redundancy, LACP port-channels, Rapid-PVST spanning tree
+- Inter-VLAN isolation policies and DMZ segmentation
+- NAT/PAT, DHCP snooping, Dynamic ARP Inspection, port security
+- SSH hardened management access restricted to IT VLAN
+
+[Network Documentation](docs/network-documentation.md)  
+[Device Configurations](docs/configurations.md)
+
+
 
 ## 🌐 Socials:
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-%230077B5.svg?logo=linkedin&logoColor=white)](https://linkedin.com/in/www.linkedin.com/in/musasizi-christian-754272299) [![email](https://img.shields.io/badge/Email-D14836?logo=gmail&logoColor=white)](mailto:musasizichristian@gmail.com) 
