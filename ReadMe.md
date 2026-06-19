@@ -27,8 +27,9 @@ A fully designed and implemented enterprise network for a Kampala-based consulti
 - SSH hardened management access restricted to IT VLAN
 
 [Network Documentation](/project-docs/nexus/nexus-documentation.md)  
-[Device Configurations](/project-docs/nexus/nexus-configurations.md)
+[Device Configurations](/project-docs/nexus/nexus-configurations.md) 
 [Packet Tracer File](/project-docs/nexus/ENT_LAB.pkt)
+
 
 
 
