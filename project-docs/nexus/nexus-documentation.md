@@ -1,7 +1,7 @@
 > **Fictional scenario.** Nexus Consulting Group does not exist. This documentation was produced for an academic portfolio lab project built in Cisco Packet Tracer.
 
 **Author:** Musasizi Christian Samuel
-**Programme:** BSc Networking and Cybersecurity, Year 2 — ISBAT University, Kampala
+**Programme:** BSc Networking and Cybersecurity, Year 3 — ISBAT University, Kampala
 **Tool:** Cisco Packet Tracer
 **Architecture:** Collapsed two-tier campus network
 **Last updated:** June 2026
