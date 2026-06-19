@@ -27,7 +27,7 @@ A fully designed and implemented enterprise network for a Kampala-based consulti
 - SSH hardened management access restricted to IT VLAN
 
 [Network Documentation](/project-docs/network-documentation.md)  
-[Device Configurations](/docs/configurations.md)
+[Device Configurations](/project-docs/configurations.md)
 
 
 
