@@ -26,8 +26,8 @@ A fully designed and implemented enterprise network for a Kampala-based consulti
 - NAT/PAT, DHCP snooping, Dynamic ARP Inspection, port security
 - SSH hardened management access restricted to IT VLAN
 
-[Network Documentation](/project-docs/network-documentation.md)  
-[Device Configurations](/project-docs/configurations.md)
+[Network Documentation](/project-docs/nexus-documentation.md)  
+[Device Configurations](/project-docs/nexus-configurations.md)
 
 
 
