@@ -1,8 +1,11 @@
 > Fictional scenario. Nexus Consulting Group does not exist. This documentation was built as a personal portfolio project in Cisco Packet Tracer.
 
 Author: Musasizi Christian Samuel
+
 Tool: Cisco Packet Tracer
+
 Architecture: Collapsed two-tier campus network
+
 Last updated: June 2026
 
 ---
