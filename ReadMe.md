@@ -28,7 +28,9 @@ A fully designed and implemented enterprise network for a fictional Kampala-base
 - NIST CSF gap analysis and MITRE ATT&CK control mapping
 
 [Network Documentation](/project-docs/nexus/nexus-documentation.md)  
+
 [Device Configurations](/project-docs/nexus/nexus-configurations.md) 
+
 [Packet Tracer File](/project-docs/nexus/ENT_LAB.pkt)
 
 
