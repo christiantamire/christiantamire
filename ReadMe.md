@@ -15,16 +15,17 @@ I’m passionate about Linux systems and Networking.
 
 ## Projects
 
-### Nexus Consulting Group — Enterprise Network Lab
-A fully designed and implemented enterprise network for a Kampala-based consulting firm, built in Cisco Packet Tracer.
+### Nexus Consulting Group: Enterprise Network Lab
+A fully designed and implemented enterprise network for a fictional Kampala-based consulting firm, built in Cisco Packet Tracer. Covers the full PPDIOO lifecycle, with a NIST CSF gap analysis and a MITRE ATT&CK mapping included alongside the design itself.
 
 **Key implementations:**
-- Three-tier hierarchical architecture (Core, Distribution, Access)
-- Cisco ASA firewall with granular ACLs across DMZ, internal, and outside interfaces
+- Collapsed two-tier campus architecture (core and access, no dedicated distribution layer)
+- Cisco ASA 5506 firewall with granular ACLs across DMZ, internal, and outside interfaces
 - OSPF routing, HSRP redundancy, LACP port-channels, Rapid-PVST spanning tree
 - Inter-VLAN isolation policies and DMZ segmentation
 - NAT/PAT, DHCP snooping, Dynamic ARP Inspection, port security
 - SSH hardened management access restricted to IT VLAN
+- NIST CSF gap analysis and MITRE ATT&CK control mapping
 
 [Network Documentation](/project-docs/nexus/nexus-documentation.md)  
 [Device Configurations](/project-docs/nexus/nexus-configurations.md) 
