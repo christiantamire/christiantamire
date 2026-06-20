@@ -1,8 +1,16 @@
 ## Hi, I'm Christian Musasizi
 
 ### About Me
-I’m a university student pursuing Cybersecurity.  
-I’m passionate about Linux systems and Networking.
+
+My background is in networking — VLANs, routing protocols, firewalls, the whole stack — 
+but I'm equally drawn to the security side: how networks get attacked, how they get 
+defended, and where the gaps usually are. Ethical hacking is part of that curiosity.
+
+Most of what I know came from building it myself. I design labs, break them, fix them, 
+and document why they broke. That process taught me more than any lecture did.
+
+I'm currently looking for entry-level roles and internships where I can apply what 
+I've been building in the lab to real infrastructure.
 
 ### Interests
 - Linux systems & administration  
