@@ -1,6 +1,6 @@
 # Nexus Consulting Group: Device Configurations
 
-> Companion file to `network-documentation.md`. Contains the running configuration commands for every device type referenced in that document. Router0 and the DMZ server configs are not included; they weren't supplied as part of this configuration set.
+> Companion file to `nexus-documentation.md`. Contains the running configuration commands for every device type referenced in that document. Router0 and the DMZ server configs are not included; they weren't supplied as part of this configuration set.
 
 ---
 
