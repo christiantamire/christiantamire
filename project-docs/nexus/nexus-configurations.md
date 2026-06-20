@@ -1,6 +1,6 @@
-# Nexus Consulting Group — Device Configurations
+# Nexus Consulting Group: Device Configurations
 
-> Companion file to `nexus-documentation.md`. Contains the running configuration commands for every device type referenced in that document. Router0 and the DMZ server configs are not included — they weren't supplied as part of this configuration set.
+> Companion file to `network-documentation.md`. Contains the running configuration commands for every device type referenced in that document. Router0 and the DMZ server configs are not included; they weren't supplied as part of this configuration set.
 
 ---
 
@@ -360,7 +360,7 @@ ex
 
 ---
 
-## ACCESS-SWITCH 1 to 4 — shared baseline template
+## ACCESS-SWITCH 1 to 4: shared baseline template
 
 Applied to all four access switches before the per-switch VLAN assignments below.
 
@@ -455,7 +455,7 @@ switchport access vlan 40
 
 ---
 
-## PERIMETER FIREWALL (ASA0)
+## PERIMETER FIREWALL (ASA0, Cisco ASA 5506)
 
 ```
 en
@@ -545,6 +545,5 @@ nat (DMZ,OUTSIDE) dynamic interface
 
 ## Notes on this configuration set
 
-- **Router0**configurations are not included here 
-
-
+- ASA0 is a Cisco ASA 5506. Router0 and the DMZ server (Web, FTP, DNS) configurations are not included here, since they weren't supplied alongside the switch/firewall configs, so they aren't reproduced in this file.
+- Several discrepancies between what's configured here and the design intent described in `network-documentation.md` are called out in that file's "Open items identified during configuration review" section. Worth checking before treating this config set as final. In short: the floating static routes have no AD set, the ASA advertises the DMZ subnet into OSPF, no loopback interfaces actually exist despite `router-id` referencing loopback-style addresses, and the VTY ACL (90) is a standard ACL rather than the more granular extended ACL the design narrative implies.
