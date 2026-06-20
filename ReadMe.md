@@ -2,7 +2,7 @@
 
 ### About Me
 
-My background is in networking — VLANs, routing protocols, firewalls, the whole stack — 
+My background is in networking: VLANs, routing protocols, firewalls, the whole stack,
 but I'm equally drawn to the security side: how networks get attacked, how they get 
 defended, and where the gaps usually are. Ethical hacking is part of that curiosity.
 
