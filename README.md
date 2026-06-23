@@ -35,7 +35,9 @@ A fully designed and implemented enterprise network for a fictional Kampala-base
 - SSH hardened management access restricted to IT VLAN
 - NIST CSF gap analysis and MITRE ATT&CK control mapping
 
-[Network Documentation](/project-docs/nexus/nexus-documentation.md)  
+[Network Documentation](/project-docs/nexus/nexus-documentation.md) 
+
+[Threat Model](/project-docs/nexus/nexus-threat-model.md)
 
 [Device Configurations](/project-docs/nexus/nexus-configurations.md) 
 
