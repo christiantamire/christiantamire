@@ -8,7 +8,7 @@ Architecture: Collapsed two-tier campus network
 
 Last updated: June 2026
 
-> Security threat analysis, MITRE ATT&CK mappings, and NIST CSF gap analysis for this design are documented in `nexus-threat-model.md`.
+> Security threat analysis, MITRE ATT&CK mappings, and NIST CSF gap analysis for this design are documented in `[nexus-threat-model.md](nexus-threat-model.md)`.
 
 ---
 
