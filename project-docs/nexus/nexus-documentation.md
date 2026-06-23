@@ -1,12 +1,11 @@
 > Fictional scenario. Nexus Consulting Group does not exist. This documentation was built as a personal portfolio project in Cisco Packet Tracer.
 
 Author: Musasizi Christian Samuel
-
 Tool: Cisco Packet Tracer
-
 Architecture: Collapsed two-tier campus network
-
 Last updated: June 2026
+
+> Security threat analysis, MITRE ATT&CK mappings, and NIST CSF gap analysis for this design are documented in `nexus-threat-model.md`.
 
 ---
 
@@ -109,7 +108,7 @@ Each access switch uplinks to both core switches, one trunk port to each. That's
 
 ### Layer 2
 
-VLANs
+**VLANs**
 
 VLAN segmentation puts each department in its own broadcast domain. This limits ARP flood and DHCP attack blast radius to a single VLAN, and forces all cross-department traffic through the Layer 3 routing decision on the core switches, where ACLs enforce the access policy.
 
@@ -120,7 +119,7 @@ VLAN segmentation puts each department in its own broadcast domain. This limits 
 | 30 | SERVERS | DHCP server, DNS, FTP server, company printer |
 | 40 | SALES | Sales department endpoints |
 | 50 | FINANCE | Finance department endpoints |
-| 60 | PHONES | Reserved for Phase 2 voice VLAN (see Planned additions). Already provisioned in trunk allowed-lists, DHCP snooping, and DAI on every switch, but no endpoints exist on it yet |
+| 60 | PHONES | Reserved for Phase 2 voice VLAN. Already provisioned in trunk allowed-lists, DHCP snooping, and DAI on every switch, but no endpoints exist on it yet |
 
 | Protocol / feature | Purpose |
 | --- | --- |
@@ -152,7 +151,7 @@ Platform limitation: ARP ACLs for static IP devices (servers, printer) are not s
 | NAT/PAT (ASA) | The ASA translates internal RFC1918 addresses to its outside interface IP before forwarding internet-bound traffic toward Router0. Each inside interface has its own NAT object (`INTERNAL-VLANS` for C-SW1's link, `INTERNAL-VLANS-1` for C-SW2's link) pointing to the same outside interface via dynamic PAT. DMZ servers also NAT outbound (object `DMZ`) for internet access: OS updates, external API calls. |
 | ASA static default route | ASA0 has its own static default, `route OUTSIDE 0.0.0.0 0.0.0.0 10.0.0.10`, pointing to Router0. This is the firewall's own path off the internal network. It is separate from, and sits alongside, the OSPF process running between the ASA and the core switches. |
 
-Inter-VLAN ACL policy, full detail
+**Inter-VLAN ACL policy, full detail**
 
 The access control policy follows the principle of least privilege. Departments are isolated from each other by default, with IT and SERVERS explicitly permitted as the only trusted sources. The deny rule uses a summary wildcard `192.168.0.0 0.0.7.255` to catch any internal source not explicitly permitted above it, which is cleaner than listing each department VLAN individually.
 
@@ -164,21 +163,21 @@ ACLs are applied in two directions per VLAN SVI. This governs who can reach a de
 | 20, HR | ACL 101: IT and SERVERS full IP access; all other depts denied | ACL 110: HR permitted full IP to IT and SERVERS; denied to any other internal dept; all other IP permitted (i.e., internet) |
 | 40, SALES | ACL 102: IT and SERVERS full IP access; all other depts denied | ACL 111: SALES permitted full IP to IT and SERVERS; denied to any other internal dept; all other IP permitted |
 | 50, FINANCE | ACL 103: IT and SERVERS full IP access; all other depts denied | ACL 112: FINANCE permitted full IP to IT and SERVERS; denied to any other internal dept; all other IP permitted |
-| 10, IT | No outbound ACL. IT requires unrestricted access for network management and support operations. Restricting IT would break diagnostics, monitoring, and remote access workflows. | No inbound ACL, same rationale |
+| 10, IT | No outbound ACL. IT requires unrestricted access for network management and support operations. | No inbound ACL, same rationale |
 
 In practice the `in`-direction ACLs (120, 110, 111, 112) are what actually enforce department isolation from the sending side. They stop HR, Sales, or Finance from initiating traffic toward each other, while the `out`-direction ACLs (100 to 103) enforce it from the receiving side as a second layer. Both are needed because either core switch can be the one routing the traffic depending on which one is HSRP-active for the destination VLAN at that moment.
 
-ACL 100/120 on VLAN 30 additionally narrows ICMP specifically. IT can ping SERVERS and SERVERS can ping IT, which is useful for diagnostics, but ICMP between SERVERS and any other department is denied, while non-ICMP IP traffic (DHCP relay responses, print jobs, service traffic) is left unaffected in both directions. This reduces unnecessary probe traffic to the server segment and makes servers slightly less discoverable from user VLANs without blocking the services they actually provide.
+ACL 100/120 on VLAN 30 additionally narrows ICMP specifically. IT can ping SERVERS and SERVERS can ping IT, which is useful for diagnostics, but ICMP between SERVERS and any other department is denied, while non-ICMP IP traffic (DHCP relay responses, print jobs, service traffic) is left unaffected in both directions.
 
 OSPF wildcard note: the statement `network 192.168.0.0 0.0.7.255 area 0` covers subnets .0.x through .7.x in a single line. The subnets .6.x and .7.x don't exist on any interface, so OSPF never advertises them. The wildcard matches the addressing cleanly without per-subnet entries.
 
-Design note flagged for review, DMZ subnet in OSPF: the design intent (and the original ACL/zone logic) is for the DMZ subnet to be excluded from OSPF, so that internal switches cannot learn a route to the DMZ and bypass the firewall's zone enforcement. The ASA's actual OSPF configuration, however, advertises `network 20.0.0.0 255.255.255.0 area 0` alongside its two inside transit links. As configured, the DMZ subnet is being injected into the OSPF domain, which contradicts the stated design goal and should be corrected, either by removing the DMZ network statement from the ASA's OSPF process, or by explicitly re-justifying why it's there if it was intentional (for example, internal-to-DMZ routing redundancy, in which case the ACL enforcement at the ASA interfaces would need to be the sole control instead of route absence).
+Design note flagged for review, DMZ subnet in OSPF: the design intent is for the DMZ subnet to be excluded from OSPF, so that internal switches cannot learn a route to the DMZ and bypass the firewall's zone enforcement. The ASA's actual OSPF configuration, however, advertises `network 20.0.0.0 255.255.255.0 area 0` alongside its two inside transit links. As configured, the DMZ subnet is being injected into the OSPF domain, which contradicts the stated design goal and should be corrected. See open items.
 
 ---
 
 ## Perimeter security
 
-ASA zone model
+**ASA zone model**
 
 | Interface | Name | Security level | Network | Connected to |
 | --- | --- | --- | --- | --- |
@@ -189,7 +188,7 @@ ASA zone model
 
 Known limitation, dual inside interfaces: both inside interfaces sit at security level 100. The command `same-security-traffic permit inter-interface` is required for traffic to pass between them and is not available in Packet Tracer's ASA 5506 implementation. This topology was chosen to simulate the budget reality of a mid-size firm that cannot afford a dedicated inside transit switch. In production, a single inside interface connected to a small transit switch would be correct, with HSRP redundancy handled transparently below it.
 
-ASA ACL policy
+**ASA ACL policy**
 
 Internal hosts reach DMZ servers on specific permitted ports only (`INTERNAL_IN`, applied inbound on both inside interfaces). A deny rule for the DMZ subnet fires before the broad internet permit, so hosts cannot reach DMZ servers on unpermitted ports even though the final rule allows all other outbound traffic.
 
@@ -201,44 +200,28 @@ External traffic reaches only the three DMZ servers on their published ports (`O
 
 ## Management plane security
 
-Core switches and access switches implement materially different levels of management plane control. Some of this is a genuine platform constraint of the 2950T-24 (no scrypt support); the SSH gap, however, is a configuration omission rather than a hardware ceiling. The platform supports SSH, it just isn't enabled in the access-switch template used here. Worth stating plainly either way, since the fix differs: one needs different hardware, the other just needs the missing commands added.
+Core switches and access switches implement materially different levels of management plane control. Some of this is a genuine platform constraint of the 2950T-24 (no scrypt support); the SSH gap, however, is a configuration omission rather than a hardware ceiling.
 
-Core switches (C-SW1, C-SW2)
+**Core switches (C-SW1, C-SW2)**
 
 | Username | Privilege | Access |
 | --- | --- | --- |
 | admin | 15 | Full IOS access including configuration mode |
 | support | 1 | Show commands only |
 
-SSH: SSH version 2 replaces Telnet for all remote management. Telnet sends credentials and session data in plaintext, so anyone with access to the management network can capture the session. SSHv2 encrypts the entire session. RSA key generation at 2048 bits provides the key material; `transport input ssh` under VTY explicitly blocks Telnet so the protocol never answers even if someone tries.
+SSH version 2 replaces Telnet for all remote management. RSA key generation at 2048 bits provides the key material; `transport input ssh` under VTY explicitly blocks Telnet. Both console and VTY lines use `login local`, authenticating against the local username database. VTY ACL (ACL 90) restricts SSH access via `access-class 90 in`, permitting only the IT subnet (192.168.1.0/24). Enable secret uses scrypt-based hashing (`algorithm-type scrypt`). `service password-encryption` encrypts all plaintext passwords in the running config; this is reversible and is not a strong control — it prevents casual shoulder-surfing rather than protecting against a determined attacker with config file access.
 
-Console and VTY authentication: both console and VTY lines use `login local`, authenticating against the local username database rather than a shared line password. This means every login produces an identifiable user rather than an anonymous password match, which matters for audit trails.
+**Access switches (A-SW1 to A-SW4)**
 
-VTY ACL (ACL 90): SSH access to both core switches is restricted via `access-class 90 in`, which permits only the IT subnet (192.168.1.0/24) as a source. Any SSH attempt from HR, Sales, Finance, or the SERVERS VLAN is dropped before authentication, reducing the attack surface. A compromised Finance PC cannot attempt to brute-force the core switch management interface. Platform note: ACL 90 is a standard ACL, which can only match on source address; it has no destination clause. So while the design intent is "IT may SSH to the core switches' loopbacks and SVIs specifically," what's actually enforced is broader: IT may SSH to anything reachable, not just those two switches. The practical effect (only IT can initiate SSH inbound at all) holds, but the finer-grained "to these specific management addresses only" restriction would need an extended ACL to actually be enforced.
+SSH not enabled. The 2950T-24 does support SSH, but the supplied template doesn't configure it: no `crypto key generate`, no `ip domain-name`, no per-user `login local` on VTY. Management is via Telnet only. Console uses a shared plaintext line password (`cisco-nexus`). VTY uses a shared line password (`cisco-nexus-123`) with plain `login`, no `access-class`. Enable secret uses standard MD5 hashing (no scrypt support on this platform). `service password-encryption` is present, same caveat as above.
 
-enable secret: scrypt-based hashing (`algorithm-type scrypt`) is used rather than the default MD5. Scrypt is deliberately memory-intensive, making offline dictionary attacks against the hash significantly slower.
-
-service password-encryption: encrypts all plaintext passwords in the running config (line passwords, OSPF authentication if added later). The encryption is reversible with known tools, so this is not a strong control. It prevents casual shoulder-surfing of a printed config rather than protecting against a determined attacker with config file access.
-
-Access switches (A-SW1 to A-SW4)
-
-SSH not enabled, and this is not a hardware limitation. The 2950T-24 does support SSH, but the supplied template doesn't configure it: no `crypto key generate`, no `ip domain-name`, no per-user `login local` on VTY. As built, there is no SSH server running on these switches, so management is via Telnet only, and the core-switch SSH rationale above doesn't apply to them yet. This is closable entirely through configuration, without replacing hardware.
-
-Console: a shared plaintext line password (`cisco-nexus`), not per-user authentication. No individual audit trail at the console.
-
-VTY: a shared line password (`cisco-nexus-123`) with plain `login`, not `login local`. Same limitation, and no `access-class` restricting which source subnet may even attempt to connect. Any device that can route to an access switch's management IP can attempt that shared password over Telnet.
-
-enable secret: standard MD5 hashing (no scrypt support on this platform).
-
-service password-encryption: present, same caveat as above (reversible, not a strong control).
-
-This gap is the most significant difference between the "intended" management-plane posture described for the network as a whole and what's actually running on the access switches today. Unlike the scrypt limitation, this one doesn't require new hardware. Enabling SSH (generating RSA keys, setting a domain name, switching VTY to `login local` and `transport input ssh`) on the existing 2950T-24s would close it directly. The scrypt gap is the only piece that genuinely needs a production hardware refresh.
+This gap is the most significant difference between the intended management-plane posture and what's actually running on the access switches. Unlike the scrypt limitation, this one doesn't require new hardware. Enabling SSH on the existing 2950T-24s would close it directly.
 
 ---
 
 ## IP and VLAN planning
 
-Internal subnets
+**Internal subnets**
 
 | VLAN | Subnet | Gateway (HSRP VIP) | DHCP served |
 | --- | --- | --- | --- |
@@ -249,7 +232,7 @@ Internal subnets
 | 50, FINANCE | 192.168.5.0/24 | 192.168.5.1 | Yes |
 | 60, PHONES (reserved) | 192.168.6.0/24 (reserved, unused) | 192.168.6.1 (reserved, unused) | Planned, Phase 2 |
 
-HSRP per-VLAN summary
+**HSRP per-VLAN summary**
 
 | VLAN | C-SW1 SVI | C-SW2 SVI | Virtual IP | Active switch |
 | --- | --- | --- | --- | --- |
@@ -259,7 +242,7 @@ HSRP per-VLAN summary
 | 40 | 192.168.4.2 | 192.168.4.3 | 192.168.4.1 | C-SW2 |
 | 50 | 192.168.5.2 | 192.168.5.3 | 192.168.5.1 | C-SW2 |
 
-WAN links
+**WAN links**
 
 | Link | Subnet | Device A | Device B |
 | --- | --- | --- | --- |
@@ -267,14 +250,14 @@ WAN links
 | C-SW2 to ASA | 10.0.0.4/30 | C-SW2: 10.0.0.5 | ASA: 10.0.0.6 |
 | ASA to Router0 | 10.0.0.8/30 | ASA: 10.0.0.9 | Router0: 10.0.0.10 |
 
-VLAN 30 static assignments
+**VLAN 30 static assignments**
 
 | Device | IP |
 | --- | --- |
 | DHCP server | 192.168.3.4 |
 | Company printer | 192.168.3.7 |
 
-DMZ static assignments
+**DMZ static assignments**
 
 | Device | IP | External access | Internal access |
 | --- | --- | --- | --- |
@@ -284,110 +267,15 @@ DMZ static assignments
 
 Note: 20.0.0.0/24 is a public IP range used here as a simulation choice. Production DMZ addressing would use RFC1918 space or a properly allocated public range.
 
-VTP domain: all switches share VTP domain `nexus` (C-SW1 server, everything else client); see the Layer 2 section for the rationale.
+VTP domain: all switches share VTP domain `nexus` (C-SW1 server, everything else client).
 
-Design decision, FTP in DMZ: FTP was placed in the DMZ rather than VLAN 30 to allow external partners to retrieve shared resources without entering the internal network. Internal users reach it through the ASA on ports 20 and 21. The `INTERNAL_IN` ACL explicitly permits this traffic while blocking all other DMZ-bound connections on unpermitted ports.
-
-Production hardening note, SFTP: standard FTP transmits credentials and file data in plaintext. In production, SFTP (SSH File Transfer Protocol, port 22) would replace FTP entirely. SFTP encrypts transport by default, operates on a single port which simplifies ASA rule management, and eliminates the passive mode multi-port complexity of FTPS. The only reason to prefer FTPS over SFTP is legacy system compatibility. Packet Tracer does not support SFTP, so FTP is used here as a simulation constraint.
-
----
-
-## MITRE ATT&CK mapping
-
-| Control implemented | ATT&CK technique mitigated | Tactic |
-| --- | --- | --- |
-| VLAN segmentation | T1021, Remote services | Lateral movement |
-| DHCP snooping | T1557.003, DHCP spoofing | Credential access |
-| Dynamic ARP Inspection | T1557.002, ARP cache poisoning | Credential access |
-| Port security, sticky MAC | T1200, Hardware additions | Initial access |
-| BPDU Guard | T1200, Hardware additions (rogue switch) | Initial access |
-| ASA zone enforcement | T1090, Proxy; T1571, Non-standard port | Command and control |
-| ACL: deny DMZ-to-internal | T1210, Exploitation of remote services | Lateral movement |
-| Management plane passwords | T1078, Valid accounts | Privilege escalation |
-| OUTSIDE_IN ACL | T1190, Exploit public-facing application | Initial access |
-| SSH with VTY ACL (IT only, core switches) | T1110, Brute force; T1078, Valid accounts | Credential access |
-| Inter-VLAN ACLs (dept isolation, both directions) | T1021, Remote services (lateral movement between VLANs) | Lateral movement |
-| Privilege level separation (admin/support) | T1078.003, Local accounts | Privilege escalation |
-
-Coverage gap worth noting: the access switches' lack of configured SSH and per-user authentication (the platform supports both; see Management plane security) means T1078/T1110 mitigation only fully applies to the core switches. Telnet on the access layer is a residual exposure that the MITRE mapping above doesn't fully close. Flagged here rather than folded into the table so it isn't overstated as "mitigated." This is a remediation task, not a hardware limitation.
-
----
-
-## NIST gap analysis
-
-MITRE ATT&CK shows which attack techniques I'm mitigating. Here I want to use the NIST Cybersecurity Framework (CSF) 2.0 to ask a different question: across the full security lifecycle (Govern, Identify, Protect, Detect, Respond, Recover), which stages does this network actually cover, and which did I miss entirely? I'm using both frameworks together rather than picking one, since they answer different questions.
-
-The honest finding, stated up front: I built something Protect-heavy and Detect/Respond/Recover-light. That's a normal and defensible profile for a campus network lab focused on segmentation and access control, but it's a real gap in what I built, not just an unaddressed nice-to-have, and I'd rather name it myself than have an auditor find it first.
-
-### GV (Govern)
-
-| CSF Category | Implemented in this design? | Evidence / gap |
-| --- | --- | --- |
-| GV.OC, Organizational context | Partial | Organisational profile section defines the firm, departments, and data sensitivity (HR/Finance) that drove the segmentation decision. No formal risk tolerance or mission-criticality statement beyond that narrative. |
-| GV.RM, Risk management strategy | Not implemented | No documented risk register, risk acceptance criteria, or prioritisation method. The design implicitly treats HR/Finance data as high-value (via ACL policy) but never states this as a formal risk decision. |
-| GV.RR, Roles, responsibilities, authorities | Partial | Privilege levels (`admin` vs `support`) are a role separation, but there's no broader policy defining who owns network security decisions, who can approve config changes, or incident escalation authority. |
-| GV.PO, Policy | Not implemented | No written security policy document exists outside this technical documentation. The ACL/zone rationale functions as de facto policy but isn't formalised as one. |
-| GV.SC, Supply chain risk | Not applicable at this scale | No third-party vendors or supply chain in scope for a single-office lab build. |
-
-### ID (Identify)
-
-| CSF Category | Implemented in this design? | Evidence / gap |
-| --- | --- | --- |
-| ID.AM, Asset management | Yes | Physical inventory table lists every device, model, and role. IP and VLAN planning tables document every subnet and static assignment. |
-| ID.RA, Risk assessment | Partial | MITRE ATT&CK mapping is effectively a lightweight risk assessment (technique-to-control), but there's no asset-level risk scoring or likelihood/impact analysis. |
-| ID.IM, Improvement | Partial | The "Challenges faced" and "Open items identified during configuration review" sections function as an informal lessons-learned/improvement log, which is the right instinct, but it isn't tied to a recurring review cadence. |
-
-### PR (Protect): the design's strongest area
-
-| CSF Category | Implemented in this design? | Evidence / gap |
-| --- | --- | --- |
-| PR.AA, Identity management, authentication, access control | Yes (core switches) / Partial (access switches) | `login local`, SSH, privilege levels, VTY ACL 90, and port security all map here on core switches. Access switches fall back to shared Telnet passwords, not because the hardware can't do SSH, but because it isn't configured yet; see Management plane security for the full gap. |
-| PR.DS, Data security | Partial | VLAN segmentation and inter-VLAN ACLs protect data in transit between zones, but nothing in this build addresses data at rest (no encryption requirement on file shares, no DLP). Out of scope for a Packet Tracer lab, but worth naming as a boundary. |
-| PR.PS, Platform security | Yes | `service password-encryption`, scrypt-hashed enable secrets (core switches), DHCP snooping, DAI, port security, PortFast/BPDU Guard, ASA zone enforcement. This is where most of the project's actual engineering effort sits. |
-| PR.IR, Technology infrastructure resilience | Yes | HSRP, RPVST+, LACP EtherChannel, OSPF with floating static backup. Redundancy is genuinely well covered at L2/L3. |
-
-### DE (Detect): the most significant gap
-
-| CSF Category | Implemented in this design? | Evidence / gap |
-| --- | --- | --- |
-| DE.CM, Continuous monitoring | No | No syslog server, no SNMP monitoring, no NetFlow/traffic analysis anywhere in the topology. Port security violations and BPDU Guard errdisable events happen locally on a switch but are never collected or alerted on centrally. |
-| DE.AE, Adverse event analysis | No | There is no log correlation or alerting mechanism at all. An ARP spoofing attempt that DAI drops, or a port security violation, generates a local console message and nothing else. No one is notified unless they happen to be watching that device's console at that moment. |
-
-This is the clearest, most concrete gap once I lined the design up against NIST: the network can prevent and block a meaningful set of attacks (DAI, DHCP snooping, port security, ACLs), but I have no way of knowing when those defenses actually fire unless I'm physically checking individual device logs. A rogue device triggering BPDU Guard, for example, would errdisable the port correctly, but nobody gets told it happened.
-
-### RS (Respond)
-
-| CSF Category | Implemented in this design? | Evidence / gap |
-| --- | --- | --- |
-| RS.MA, Incident management | No | No incident response plan exists. There's no documented process for what happens after, say, a port goes errdisabled from a BPDU Guard trigger. Recovery is manual and undocumented (`shutdown` / `no shutdown` by whoever notices). |
-| RS.AN, Incident analysis | No | No forensic logging capability (see DE.CM) means there would be nothing to analyze even if an incident were noticed. |
-| RS.CO, Incident communication | No | No defined escalation path or stakeholder communication plan. |
-
-### RC (Recover)
-
-| CSF Category | Implemented in this design? | Evidence / gap |
-| --- | --- | --- |
-| RC.RP, Recovery planning | No | No documented configuration backup process (for example, scheduled `copy running-config` to a TFTP/server target), no disaster recovery plan, no defined RTO/RPO for any device. If a core switch's config were lost, recovery would mean manually re-entering everything from this documentation rather than restoring a saved config. |
-| RC.CO, Recovery communication | No | Falls out of RS.CO above. No plan exists to communicate recovery status either. |
-
-### Summary
-
-| CSF Function | Coverage |
-| --- | --- |
-| Govern | Mostly absent, informal only |
-| Identify | Good, asset inventory and IP/VLAN planning are thorough |
-| Protect | Strong, this is where the project's engineering effort went |
-| Detect | Absent, no monitoring, logging, or alerting anywhere in the topology |
-| Respond | Absent, no incident response process |
-| Recover | Absent, no config backup or recovery plan |
-
-For a network scoped around segmentation, redundancy, and perimeter defense, I think this is a reasonable place to land. Protect was the explicit brief I set for myself, and that's where the engineering time went. But I want to be honest about what it means: a network that only protects, without detect, respond, and recover, is one good zero-day or insider mistake away from an incident I wouldn't even find out about until the damage was already done. I've already gestured at this in "Planned additions" with end-to-end verification testing, but the obvious next step is a syslog server in the SERVERS VLAN with `logging host` on every device. It's the cheapest way into the Detect function, and right now I have none of it.
+Design decision, FTP in DMZ: FTP was placed in the DMZ rather than VLAN 30 to allow external partners to retrieve shared resources without entering the internal network. Internal users reach it through the ASA on ports 20 and 21. Production hardening note: standard FTP transmits credentials and file data in plaintext. In production, SFTP (SSH File Transfer Protocol, port 22) would replace FTP entirely. Packet Tracer does not support SFTP, so FTP is used here as a simulation constraint.
 
 ---
 
 ## Challenges faced
 
-HSRP standby persisting on intended active switch
+**HSRP standby persisting on intended active switch**
 
 C-SW1 was configured with HSRP priority 110 and preempt but remained in standby. C-SW2 was winning the active election despite priority 100.
 
@@ -397,7 +285,7 @@ Fix: `spanning-tree vlan 10,20,30 root primary` on C-SW1. Once STP converged wit
 
 Lesson: STP root and HSRP active must be configured on the same switch per VLAN. HSRP priority alone doesn't determine the active switch if the underlying Layer 2 path is broken.
 
-Multi-area OSPF instability
+**Multi-area OSPF instability**
 
 Configuring VLANs in Area 1 and WAN links in Area 0 caused 25 to 75% sustained packet loss across all internal traffic.
 
@@ -409,25 +297,25 @@ Fix: collapsed all devices into single Area 0. No ABR role, no Type 3 LSA genera
 
 Lesson: multi-area OSPF adds value at scale with hundreds of routers. For a collapsed two-tier campus with five subnets, single Area 0 is the correct design. HSRP and ABR roles conflict when on the same device. HSRP failover events trigger OSPF reconvergence at the area boundary simultaneously.
 
-EtherChannel not forming
+**EtherChannel not forming**
 
 `channel-group` entered before `channel-protocol lacp` and without `mode active`. Port-channel did not come up.
 
 Fix: correct order is `channel-protocol lacp` then `channel-group 1 mode active`.
 
-SVIs administratively down
+**SVIs administratively down**
 
 Packet Tracer defaults SVIs to administratively down. HSRP would not form until `no shut` was added under every VLAN interface on both core switches.
 
-HSRP group number missing
+**HSRP group number missing**
 
 Standby commands entered without group numbers. All VLANs defaulted to HSRP group 0. Each VLAN needs its own group number matching the VLAN ID.
 
-Preempt on standby switch
+**Preempt on standby switch**
 
 Preempt was configured on both switches. This risks the standby switch stealing the active role back mid-session after a failover event. Preempt belongs only on the intended active switch.
 
-same-security-traffic not available in Packet Tracer
+**same-security-traffic not available in Packet Tracer**
 
 Two inside interfaces at security level 100 require `same-security-traffic permit inter-interface`. The command is not supported in the Packet Tracer ASA 5506 implementation. Documented as a platform limitation.
 
@@ -438,10 +326,10 @@ Two inside interfaces at security level 100 require `same-security-traffic permi
 These were found while cross-checking the running configuration against the design intent described above. They aren't yet resolved and are listed separately from "Challenges faced" because they're configuration gaps caught on review, not issues hit and fixed during the build.
 
 1. Floating static default routes have no administrative distance set. As configured, they default to AD 1 (more preferred than OSPF's 110), which would make them primary rather than a backup. Needs `254` appended to both `ip route` commands.
-2. DMZ subnet is advertised into OSPF by the ASA, despite the documented design intent being to keep it out of the routing domain specifically so internal switches can't reach DMZ servers around the firewall's zone enforcement. Needs either removal of `network 20.0.0.0 255.255.255.0 area 0` from the ASA's OSPF process, or an explicit decision to keep it with the rationale documented.
-3. Loopback interfaces don't exist yet. `router-id` is set as a bare value on both core switches' OSPF process, but no `interface loopback0` was created, so there's nothing advertised into OSPF and nothing for IT to SSH into at a stable address. Needs the loopback interfaces actually created, addressed, and added to the OSPF network statement.
-4. VTY ACL (90) is a standard ACL. It correctly restricts SSH source to the IT subnet, but cannot enforce the "only to these specific loopback/SVI destinations" granularity implied by the design. It permits IT to SSH anywhere reachable, not just the core switches. Would need an extended ACL referencing destination addresses and port 22 to match the design as described.
-5. SSH is not configured on the access switches, though the platform supports it. Unlike the core-switch scrypt limitation, this isn't a hardware ceiling; the 2950T-24 can run SSH. Closing it just needs `ip domain-name`, `crypto key generate rsa`, `login local` with per-user accounts, and `transport input ssh` added to each access switch's VTY configuration, matching what's already done on C-SW1/C-SW2.
+2. DMZ subnet is advertised into OSPF by the ASA, despite the documented design intent being to keep it out of the routing domain. Needs either removal of `network 20.0.0.0 255.255.255.0 area 0` from the ASA's OSPF process, or an explicit decision to keep it with the rationale documented.
+3. Loopback interfaces don't exist yet. `router-id` is set as a bare value on both core switches' OSPF process, but no `interface loopback0` was created. Needs the loopback interfaces actually created, addressed, and added to the OSPF network statement.
+4. VTY ACL (90) is a standard ACL. It correctly restricts SSH source to the IT subnet, but cannot enforce destination-specific granularity. Would need an extended ACL referencing destination addresses and port 22 to match the design as described.
+5. SSH is not configured on the access switches, though the platform supports it. Closing it needs `ip domain-name`, `crypto key generate rsa`, `login local` with per-user accounts, and `transport input ssh` added to each access switch's VTY configuration.
 
 ---
 
@@ -453,4 +341,4 @@ These were found while cross-checking the running configuration against the desi
 | End-to-end verification | HSRP failover test (pull cable on C-SW1), DHCP lease verification per VLAN, ping matrix across all VLANs, OSPF neighbour verification. |
 | Voice VLAN 60, Phase 2 | VLAN 60 PHONES designed. Physical phones removed from current topology; no dedicated CME router within budget. Deferred. |
 | DHCP snooping and DAI verification | Test rogue DHCP server detection and ARP spoofing drop behaviour explicitly. |
-| Centralised logging (syslog) | Directly motivated by the NIST gap analysis above: add a syslog server in the SERVERS VLAN and `logging host <address>` on every switch and the ASA. Cheapest, highest-value first step into the CSF Detect function. Currently port security violations, BPDU Guard triggers, and DAI drops are visible only on local device consoles. |
+| Centralised logging (syslog) | Add a syslog server in the SERVERS VLAN and `logging host <address>` on every switch and the ASA. Cheapest, highest-value first step into the CSF Detect function. Currently port security violations, BPDU Guard triggers, and DAI drops are visible only on local device consoles. |
