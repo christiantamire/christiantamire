@@ -110,6 +110,10 @@ router ospf 15
 router-id 1.2.1.2
 network 192.168.0.0 0.0.7.255 area 0
 network 10.0.0.0 0.0.0.3 area 0
+passive-interface gigabitEthernet 1/0/2
+passive-interface gigabitEthernet 1/0/3
+passive-interface gigabitEthernet 1/0/4
+passive-interface gigabitEthernet 1/0/5
 ex
 
 int range g1/0/2-5
@@ -277,6 +281,10 @@ router ospf 15
 router-id 2.1.2.1
 network 192.168.0.0 0.0.7.255 area 0
 network 10.0.0.4 0.0.0.3 area 0
+passive-interface gigabitEthernet 1/0/2
+passive-interface gigabitEthernet 1/0/3
+passive-interface gigabitEthernet 1/0/4
+passive-interface gigabitEthernet 1/0/5
 ex
 
 ip route 0.0.0.0 0.0.0.0 10.0.0.6
@@ -389,12 +397,14 @@ ip dhcp snooping vlan 10,20,30,40,50,60
 no ip dhcp snooping information option 
 ip arp inspection vlan 10,20,30,40,50,60
 ip arp inspection validate dst-mac ip src-mac
+no cdp run
 
 int range g0/1-2
 switchport mode trunk 
 switchport trunk allowed vlan 10,20,30,40,50,60
 ip arp inspection trust
 ip dhcp snooping trust
+cdp enable
 
 int range f0/1-4
 switchport mode access 
