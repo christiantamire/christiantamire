@@ -64,23 +64,8 @@ Cisco's PPDIOO lifecycle model frames the project across six phases. Recording t
 
 Collapsed two-tier design with no dedicated distribution layer. Both core switches connect to all four access switches via dual uplinks. Both core switches connect directly to the ASA on separate inside interfaces. The ASA connects to Router0 on its outside interface. The DMZ switch hangs off a dedicated ASA interface.
 
+ ![Topology](./nexus-topology.md)
 ```
-ISP
- |
-Router0  Fa0/0: public IP  |  Fa0/1: 10.0.0.10/30
- |
-ASA0
-  OUTSIDE:         10.0.0.9/30   (g1/4)
-  INTERNAL-CSW1:   10.0.0.2/30   (g1/1) -> C-SW1 g1/0/1: 10.0.0.1
-  INTERNAL-CSW2:   10.0.0.6/30   (g1/2) -> C-SW2 g1/0/1: 10.0.0.5
-  DMZ:             20.0.0.1/24   (g1/3) -> DMZ-SW -> Web, FTP, DNS servers
-         |
-    C-SW1 <---- EtherChannel Po1 (g1/0/6-7) ----> C-SW2
-    g1/0/2-5 trunks                               g1/0/2-5 trunks
-    v    v    v    v                             v    v    v    v
-  A-SW1 A-SW2 A-SW3 A-SW4
-```
-
 Port-by-port connection map:
 
 | Local device | Local port | Remote device | Remote port | Link type |
