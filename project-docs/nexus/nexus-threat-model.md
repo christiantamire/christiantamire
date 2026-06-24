@@ -246,8 +246,8 @@ An attacker connected to any access port passively receives CDP advertisements f
 | Tactic | Reconnaissance |
 | Threat actor | Any attacker with physical access to an access port |
 | Affected assets | Network topology confidentiality |
-| Control implemented | None. CDP is running by default on all interfaces including access-facing ports. |
-| Residual risk statement | Medium. An attacker on any access port learns switch model, management IP, and IOS version passively with no detection possible. |
+| Control implemented | Addressed on access switches. `no cdp run` disables CDP globally on each access switch, then `cdp enable` re-enables it only on the trusted uplinks (g0/1-2) toward the core switches. Access-facing ports (f0/1-4) run no CDP at all. Core switches still run CDP on all interfaces by default, including the trunk ports facing access switches (g1/0/2-5) — not reachable from end-host ports, but visible to anyone who gains a foothold on the trunk segment itself (e.g. via Scenario 3). |
+| Residual risk statement | Low. The original gap — CDP visible from any end-host access port — is closed. Remaining exposure is limited to the access-switch uplink trunks and core-switch trunk interfaces, which require already having a position on the inter-switch segment rather than a standard user port. |
 
 ---
 
@@ -280,7 +280,7 @@ Each scenario is scored using a 5×5 likelihood × impact matrix. Scores are ass
 | 9 | DMZ pivot to internal | 3 | 5 | 15 | 1 | 3 | 3 | Low |
 | 10 | Brute force of management interfaces | 4 | 5 | 20 | 1 (core) / 4 (access) | 3 (core) / 5 (access) | 3 (core) / **20 (access)** | Low / **High** |
 | 11 | Privilege escalation via shared credentials | 3 | 4 | 12 | 1 (core) / 3 (access) | 2 (core) / 4 (access) | 2 (core) / **12 (access)** | Low / **High** |
-| 12 | CDP topology reconnaissance | 5 | 2 | 10 | 5 | 2 | **10** | Medium |
+| 12 | CDP topology reconnaissance | 5 | 2 | 10 | 1 | 1 | **1** | Low |
 
 **Residual risk heat map**
 
@@ -290,15 +290,15 @@ Impact
   4 |        |        |        |  [11a] |        |
   3 |        |        |  [8]   |        |        |
   2 | [1][2] |[3][4]  |  [9]   | [6]    |        |
-  1 |        |        |        |        |        |
+  1 | [12]   |        |        |        |        |
     |   1    |   2    |   3    |    4   |    5   | Likelihood
     
 [5] OSPF LSA injection — High
 [10a] Access switch brute force — High  
 [11a] Access switch privilege escalation — High
-[12] CDP reconnaissance — Medium
 [6] HSRP hijacking — Medium
 [8] DMZ exploitation — Medium
+[12] CDP reconnaissance — Low
 ```
 
 ---
@@ -323,7 +323,7 @@ Impact
 | --- | --- | --- |
 | Govern | Mostly absent | Rationale exists informally; not formalised as policy or risk register |
 | Identify | Good | Asset inventory, IP/VLAN planning, and this threat model's asset classification cover this well |
-| Protect | Strong | DAI, DHCP snooping, BPDU Guard, ASA zones, inter-VLAN ACLs, port security, SSH, privilege separation |
+| Protect | Strong | DAI, DHCP snooping, BPDU Guard, ASA zones, inter-VLAN ACLs, port security, SSH, privilege separation, CDP scoped to trusted uplinks |
 | Detect | Absent | No syslog, no SNMP, no NetFlow; control triggers (BPDU Guard, DAI, port security) are invisible beyond local console |
 | Respond | Absent | No incident response plan, no escalation path, no forensic capability |
 | Recover | Absent | No configuration backup process, no RTO/RPO, no recovery plan |
@@ -344,7 +344,7 @@ The design is Protect-heavy and Detect/Respond/Recover-absent. That is a defensi
 | T1078 / T1078.003 — Valid accounts / local accounts | Privilege escalation | Yes (core); **No (access switches)** |
 | T1557 — OSPF LSA injection | Adversary-in-the-middle | **No — not mitigated** |
 | T1557 — HSRP gateway hijacking | Adversary-in-the-middle | Partial (ACL limits scope only) |
-| T1590 — CDP reconnaissance | Reconnaissance | **No — not mitigated** |
+| T1590 — CDP reconnaissance | Reconnaissance | Yes (access-facing ports); Partial (core/access trunk interfaces still run CDP) |
 | T1599 — Network boundary bridging | Adversary-in-the-middle | **No — not mitigated** |
 
 ### Prioritised remediation
@@ -356,12 +356,13 @@ Ordered by residual risk score, highest first.
 | 1 | 15 | OSPF MD5 authentication on all OSPF devices | Low — config only | T1557 OSPF injection |
 | 2 | 20 | SSH + per-user accounts on access switches (A-SW1 to A-SW4) | Low — config only | T1110, T1078 access layer |
 | 3 | 12 | Privilege separation on access switches | Low — config only | T1078.003 access layer |
-| 4 | 10 | `no cdp enable` on all access-facing ports | Low — config only | T1590 CDP reconnaissance |
-| 5 | 9 | DMZ server hardening (OS, WAF, IPS) | Medium — production scope | T1190 DMZ exploitation |
-| 6 | 8 | HSRP MD5 authentication on both core switches | Low — config only | T1557 HSRP hijacking |
-| 7 | — | Syslog server in VLAN 30, `logging host` on all devices | Low — one server | NIST DE (Detect) function entirely |
-| 8 | — | OSPF passive interfaces on access-facing SVIs | Low — config only | Reduces OSPF attack surface |
-| 9 | — | Fix floating static AD to 254 on both core switches | Low — one command | Routing correctness |
-| 10 | — | Remove DMZ subnet from OSPF on ASA | Low — remove one network statement | Zone enforcement integrity |
-| 11 | — | Create loopback interfaces on C-SW1 and C-SW2 | Low — config only | Stable router ID, SSH management target |
-| 12 | — | Extended VTY ACL with destination and port 22 | Low-medium | Tightens SSH to specific management addresses |
+| 4 | 9 | DMZ server hardening (OS, WAF, IPS) | Medium — production scope | T1190 DMZ exploitation |
+| 5 | 8 | HSRP MD5 authentication on both core switches | Low — config only | T1557 HSRP hijacking |
+| 6 | — | Syslog server in VLAN 30, `logging host` on all devices | Low — one server | NIST DE (Detect) function entirely |
+| 7 | — | Disable CDP on core-switch trunk interfaces facing access switches (g1/0/2-5), or restrict to need-only | Low — config only | Closes remaining T1590 exposure on inter-switch trunks |
+| 8 | — | Fix floating static AD to 254 on both core switches | Low — one command | Routing correctness |
+| 9 | — | Remove DMZ subnet from OSPF on ASA | Low — remove one network statement | Zone enforcement integrity |
+| 10 | — | Create loopback interfaces on C-SW1 and C-SW2 | Low — config only | Stable router ID, SSH management target |
+| 11 | — | Extended VTY ACL with destination and port 22 | Low-medium | Tightens SSH to specific management addresses |
+
+**Note on the OSPF passive-interface remediation item from the prior revision:** `passive-interface` statements for gigabitEthernet 1/0/2–1/0/5 are present in the running configuration on both core switches, but they sit on interfaces configured as Layer 2 trunk switchports rather than Layer 3 SVIs — `passive-interface` has no effect on a switchport interface, since no OSPF process runs there in the first place. The statements are inert rather than functioning as a control. If the intent is to reduce the OSPF attack surface on VLANs that don't need to peer (e.g. VLAN 10, 20, 40, 50), `passive-interface` needs to be applied to those VLAN SVIs instead, leaving only VLAN 30 (where C-SW1 and C-SW2 peer with each other) and the link toward the firewall active. This remains an open item and is reflected in Scenario 5's "None" control status, since dead config does not reduce residual risk.
