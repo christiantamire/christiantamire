@@ -43,7 +43,7 @@ A fully designed and implemented enterprise network for a fictional Kampala-base
 
 [Packet Tracer File](/project-docs/nexus/ENT_LAB.pkt)
 
-[Topology Image](/project-docs/nexus/nexus-topology.png)
+
 
 
 ## 🌐 Socials:
